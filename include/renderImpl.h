@@ -48,7 +48,7 @@ struct __RenderText{
     GLuint count;
     float *vertexData;
 
-    uint texturesAllocated;
+    unsigned int texturesAllocated;
 
     bool transferred;
 

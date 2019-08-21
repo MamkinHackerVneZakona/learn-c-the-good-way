@@ -20,7 +20,7 @@ void __ensureSizeText(__RenderText *info, int toBeAdded){
 }
 
 void __addText(__RenderText *info, FT_Face face, const char *text, float x, float y, float z, float sx, float sy, Vec3f color) {
-    uint len = strlen(text);
+    unsigned int len = strlen(text);
     __ensureSizeText(info, len);
 
     glActiveTexture(GL_TEXTURE0);
