@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.12)
 project(learn_c_the_good_way)
 
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_BUILD_TYPE Release CACHE STRING "Type of build" FORCE)
+set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/bin CACHE STRING "Type of build" FORCE)
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+    Release)
 
 include_directories(include)
 
@@ -12,3 +16,7 @@ include_directories(${FREETYPE_INCLUDE_DIRS})
 add_executable(learn_c_the_good_way src/glad.c src/main.cpp include/vec.h include/util.h include/Line.h include/render.h src/render.cpp include/renderImpl.h src/renderImpl.cpp src/util.cpp src/vec.cpp)
 
 target_link_libraries(learn_c_the_good_way glfw freetype)
+
+install(TARGETS learn_c_the_good_way
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION Release)
