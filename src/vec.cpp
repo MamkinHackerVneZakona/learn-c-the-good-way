@@ -3,6 +3,7 @@
 //
 
 #include "vec.h"
+#include <cmath>
 
 Vec2f add(Vec2f a, Vec2f b){
     Vec2f c;
@@ -28,8 +29,20 @@ Vec2f mult(Vec2f a, float k){
     return c;
 }
 
+Vec2f mult(Vec2f a, Vec2f b){
+    Vec2f c;
+    c.x = a.x * b.x;
+    c.y = a.y * b.y;
+
+    return c;
+}
+
 float dot(Vec2f a, Vec2f b){
     return  a.x * b.x + a.y * b.y;
+}
+
+float mag(Vec2f a){
+    return  (float)sqrt(dot(a, a));
 }
 
 Vec2f ortho(Vec2f a){

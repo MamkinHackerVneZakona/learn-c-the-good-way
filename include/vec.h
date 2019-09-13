@@ -22,7 +22,11 @@ Vec2f sub(Vec2f a, Vec2f b);
 
 Vec2f mult(Vec2f a, float k);
 
+Vec2f mult(Vec2f a, Vec2f b);
+
 float dot(Vec2f a, Vec2f b);
+
+float mag(Vec2f);
 
 Vec2f ortho(Vec2f a);
 

@@ -43,12 +43,13 @@ Renderer *allocRenderer(int windowWidth, int windowHeight, const char *windowNam
 void clearAll(Renderer *renderer);
 
 void addLine2PosColor(Renderer *renderer, Line2 line, float zLevel, Vec3f colorStart, Vec3f colorEnd);
-
+void addTriangle2PosColor(Renderer *r, Vec2f *vertices, float zLevel, Vec3f *colors);
 void addText(Renderer *r, const char *text, float x, float y, float z, float sx, float sy, Vec3f color);
 
 //f : [min, max] -> [-1, 1]
 //f(x) = k * x + b
-float linearTrasformNDC(float x, float min, float max);
+float linearTransformNDC(float x, float min, float max);
+float linearTransform(float x, float min, float max, float minPrime, float maxPrime);
 
 void addFunctionGraph(Renderer *renderer, float *samples, int sampleCount, float sampleXMin, float sampleXMax, float gxMin, float gxMax, float gyMin, float gyMax, float zLevel, Vec3f color);
 
@@ -57,6 +58,9 @@ void addGraphGrid(Renderer *renderer, float xmin, float xmax, float ymin, float 
 void addFunctionGraph(Renderer *renderer, float (*f)(float), int sampleCount, float sampleXMin, float sampleXMax, float gxMin, float gxMax, float gyMin, float gyMax, float zLevel, Vec3f color);
 
 void addFunctionGraph(Renderer *renderer, float (*f)(float), int sampleCount, float sampleXMin, float sampleXMax, float zLevel, Vec3f color);
+
+void addEllipse(Renderer *renderer, Vec2f center, Vec2f right, Vec2f up, int points, float zLevel, Vec3f color);
+void addBlaze(Renderer *renderer, Vec2f center, float size, float t, float tMax, int particleCount, float zLevel, Vec3f (*getColor)(int, float) );
 
 void loop(Renderer *renderer);
 

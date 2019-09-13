@@ -3,6 +3,7 @@
 //
 
 #include "render.h"
+#include <cmath>
 
 Renderer *allocRenderer(int windowWidth, int windowHeight, const char *windowName){
 
@@ -95,12 +96,27 @@ void addText(Renderer *r, const char *text, float x, float y, float z, float sx,
     __addText(r->renderText, r->face, text, x, y, z, sx, sy, color);
 }
 
+void addTriangle2PosColor(Renderer *r, Vec2f *vertices, float zLevel, Vec3f *colors){
+    
+
+    __ensureSizePosColor(r->renderSimpleTriangles, VERTEX_SIZE_POS_COLOR * 3, 3);
+    
+    for(int i = 0; i < 3; ++i){
+        __addPointColor(r->renderSimpleTriangles, {vertices[i].x, vertices[i].y, zLevel}, colors[i]);
+    }
+}
 
 //f : [min, max] -> [-1, 1]
 //f(x) = k * x + b
-float linearTrasformNDC(float x, float min, float max){
+float linearTransformNDC(float x, float min, float max){
     float k = 2 / (max - min);
     float b = 1 - 2*max/(max - min);
+    return k * x + b;
+}
+
+float linearTransform(float x, float min, float max, float minPrime, float maxPrime){
+    float k = (maxPrime - minPrime) / (max - min);
+    float b = maxPrime - k * max;
     return k * x + b;
 }
 
@@ -112,7 +128,7 @@ void addFunctionGraph(Renderer *renderer, float *samples, int sampleCount, float
         float yVal = samples[i];
         float yValNext = samples[i + 1];
 
-        addLine2PosColor(renderer, { {linearTrasformNDC(xPoint, gxMin, gxMax), linearTrasformNDC(yVal, gyMin, gyMax)}, {linearTrasformNDC(xPointNext, gxMin, gxMax), linearTrasformNDC(yValNext, gyMin, gyMax)} }, zLevel, color, color);
+        addLine2PosColor(renderer, { {linearTransformNDC(xPoint, gxMin, gxMax), linearTransformNDC(yVal, gyMin, gyMax)}, {linearTransformNDC(xPointNext, gxMin, gxMax), linearTransformNDC(yValNext, gyMin, gyMax)} }, zLevel, color, color);
 
     }
 }
@@ -120,7 +136,7 @@ void addFunctionGraph(Renderer *renderer, float *samples, int sampleCount, float
 void addGraphGrid(Renderer *renderer, float xmin, float xmax, float ymin, float ymax, int xCount, int yCount, float sizeXNDC, float aspect, float zLevel, Vec3f color){
     for (int i = 0; i < xCount; ++i) {
         float x = xmin + (xmax - xmin)/(xCount + 1) * (i + 1);
-        float xNDC = linearTrasformNDC(x, xmin, xmax);
+        float xNDC = linearTransformNDC(x, xmin, xmax);
         Line2 l = {  {xNDC, -sizeXNDC/3 * aspect / 2} , {xNDC, sizeXNDC * aspect / 3 / 2} };
         addLine2PosColor(renderer, l, zLevel, color, color);
         char str[100];
@@ -130,7 +146,7 @@ void addGraphGrid(Renderer *renderer, float xmin, float xmax, float ymin, float 
 
     for (int i = 0; i < yCount; ++i) {
         float y = ymin + (ymax - ymin)/(yCount + 1) * (i+1);
-        float yNDC = linearTrasformNDC(y, ymin, ymax);
+        float yNDC = linearTransformNDC(y, ymin, ymax);
         Line2 l = {  {-sizeXNDC/3 / 2, yNDC * aspect} , {sizeXNDC / 3 / 2, yNDC * aspect} };
         addLine2PosColor(renderer, l, zLevel, color, color);
         char str[100];
@@ -167,6 +183,65 @@ void addFunctionGraph(Renderer *renderer, float (*f)(float), int sampleCount, fl
     free(samples);
 }
 
+void addEllipse(Renderer *renderer, Vec2f center, Vec2f right, Vec2f up, int points, float zLevel, Vec3f color){
+    
+
+    __ensureSizePosColor(renderer->renderSimpleTriangles, VERTEX_SIZE_POS_COLOR * 3 * points, 3 * points);
+    
+    float a = mag(right);
+    float b = mag(up);
+    
+     Vec2f vi = mult(right, 1.0f/a);
+     Vec2f vj = mult(up, 1.0f/b);
+    
+    for(int i = 0; i < points; ++i){
+        float xPrime = a * cos((float)i * (2 * M_PI) / points);
+        float yPrime = b * sin((float)i * (2 * M_PI) / points);
+        Vec2f v = {vi.x * xPrime + vj.x * yPrime, vi.y * xPrime + vj.y * yPrime};
+        
+        float xPrimeNext = a * cos((float)(i+1) * (2 * M_PI) / points);
+        float yPrimeNext = b * sin((float)(i+1) * (2 * M_PI) / points);
+        Vec2f vNext = {vi.x * xPrimeNext + vj.x * yPrimeNext, vi.y * xPrimeNext + vj.y * yPrimeNext};
+        
+        Vec2f vertices[] = {add(center, {v.x, v.y}), add(center, {vNext.x, vNext.y}), {center.x, center.y}};
+        Vec3f colors[] = {color, color, color};
+        
+        addTriangle2PosColor(renderer, vertices, zLevel, colors);
+    }
+}
+
+void addBlaze(Renderer *renderer, Vec2f center, float size, float t, float tMax, int particleCount, float zLevel, Vec3f (*getColor)(int, float) ){
+    
+    Vec3f ellipseColor = {1.0f, 1.0f, 0.0f};
+    
+    if(t < tMax/3){
+        addEllipse(renderer, center, {size * t, 0}, {0, size * t}, 100, zLevel, ellipseColor);
+    }else {
+        if(t < 2*tMax/3){
+            addEllipse(renderer, center, {size, 0}, {0, size}, 100, zLevel, ellipseColor);
+        }else{
+            addEllipse(renderer, center, {size * (tMax - t), 0}, {0, size * (tMax - t)}, 100, zLevel, ellipseColor);
+        }
+        
+        t = t - tMax/3;
+        float a = size / 8;
+        float b = size / 32;
+        float speed = 0.3;
+        
+        for(int i = 0; i < particleCount; ++i){
+            float gamma = (float)i * (2 * M_PI) / particleCount;
+            float vx = size * (-sin(gamma));
+            float vy = size * cos(gamma);
+            Vec2f v = {vx, vy};
+            Vec2f vN = mult(v, 1.0f/mag(v));
+            Vec2f qN = {-vN.y, vN.x};
+            Vec2f p = {center.x + size * (float)cos(gamma) + vN.x * speed * t*t, center.y + size * (float)sin(gamma) + vN.y * speed * t * t};
+            addEllipse(renderer, p, mult(vN, a), mult(qN, b), 100, zLevel, getColor(i, t));
+        }
+    }
+    
+    
+}
 
 void loop(Renderer *renderer){
     GLFWwindow *window = renderer->window;
