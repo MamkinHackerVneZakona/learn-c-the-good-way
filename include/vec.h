@@ -16,6 +16,13 @@ struct Vec3f{
     float z;
 };
 
+struct Vec4f{
+    float x;
+    float y;
+    float z;
+    float w;
+};
+
 Vec2f add(Vec2f a, Vec2f b);
 
 Vec2f sub(Vec2f a, Vec2f b);

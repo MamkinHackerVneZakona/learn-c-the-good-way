@@ -18,7 +18,7 @@
 
 const int RENDER_TYPE_TRIANGLES = GL_TRIANGLES;
 const int RENDER_TYPE_LINES = GL_LINES;
-const int VERTEX_SIZE_POS_COLOR = 6;
+const int VERTEX_SIZE_POS_COLOR = 7;
 const int VERTEX_SIZE_POS_TEXTURE = 5;
 
 struct __RenderSimple{
@@ -78,7 +78,7 @@ void __drawSimple(__RenderSimple *info);
 
 //sizes must be ensured in advance
 void __addPointColor(__RenderSimple *info, Vec3f p, Vec3f c);
-
+void __addPointColor(__RenderSimple *info, Vec3f p, Vec4f c);
 
 
 void __addLine2PosColor(__RenderSimple *info, Line2 line, float zLevel, Vec3f colorStart, Vec3f colorEnd);

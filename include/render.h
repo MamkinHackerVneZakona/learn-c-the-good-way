@@ -59,8 +59,8 @@ void addFunctionGraph(Renderer *renderer, float (*f)(float), int sampleCount, fl
 
 void addFunctionGraph(Renderer *renderer, float (*f)(float), int sampleCount, float sampleXMin, float sampleXMax, float zLevel, Vec3f color);
 
-void addEllipse(Renderer *renderer, Vec2f center, Vec2f right, Vec2f up, int points, float zLevel, Vec3f color);
-void addBlaze(Renderer *renderer, Vec2f center, float size, float t, float tMax, int particleCount, float zLevel, Vec3f (*getColor)(int, float) );
+void addEllipse(Renderer *renderer, Vec2f center, Vec2f right, Vec2f up, int points, float zLevel, Vec4f color);
+void addBlaze(Renderer *renderer, Vec2f center, float size, float t, float tMax, int particleCount, float zLevel, Vec4f (*getColor)(int, float) );
 
 void loop(Renderer *renderer);
 

@@ -106,6 +106,16 @@ void addTriangle2PosColor(Renderer *r, Vec2f *vertices, float zLevel, Vec3f *col
     }
 }
 
+void addTriangle2PosColor(Renderer *r, Vec2f *vertices, float zLevel, Vec4f *colors){
+    
+
+    __ensureSizePosColor(r->renderSimpleTriangles, VERTEX_SIZE_POS_COLOR * 3, 3);
+    
+    for(int i = 0; i < 3; ++i){
+        __addPointColor(r->renderSimpleTriangles, {vertices[i].x, vertices[i].y, zLevel}, colors[i]);
+    }
+}
+
 //f : [min, max] -> [-1, 1]
 //f(x) = k * x + b
 float linearTransformNDC(float x, float min, float max){
@@ -183,7 +193,7 @@ void addFunctionGraph(Renderer *renderer, float (*f)(float), int sampleCount, fl
     free(samples);
 }
 
-void addEllipse(Renderer *renderer, Vec2f center, Vec2f right, Vec2f up, int points, float zLevel, Vec3f color){
+void addEllipse(Renderer *renderer, Vec2f center, Vec2f right, Vec2f up, int points, float zLevel, Vec4f color){
     
 
     __ensureSizePosColor(renderer->renderSimpleTriangles, VERTEX_SIZE_POS_COLOR * 3 * points, 3 * points);
@@ -204,15 +214,15 @@ void addEllipse(Renderer *renderer, Vec2f center, Vec2f right, Vec2f up, int poi
         Vec2f vNext = {vi.x * xPrimeNext + vj.x * yPrimeNext, vi.y * xPrimeNext + vj.y * yPrimeNext};
         
         Vec2f vertices[] = {add(center, {v.x, v.y}), add(center, {vNext.x, vNext.y}), {center.x, center.y}};
-        Vec3f colors[] = {color, color, color};
+        Vec4f colors[] = {color, color, color};
         
         addTriangle2PosColor(renderer, vertices, zLevel, colors);
     }
 }
 
-void addBlaze(Renderer *renderer, Vec2f center, float size, float t, float tMax, int particleCount, float zLevel, Vec3f (*getColor)(int, float) ){
+void addBlaze(Renderer *renderer, Vec2f center, float size, float t, float tMax, int particleCount, float zLevel, Vec4f (*getColor)(int, float) ){
     
-    Vec3f ellipseColor = {1.0f, 1.0f, 0.0f};
+    Vec4f ellipseColor = {1.0f, 1.0f, 0.0f, 1};
     
     if(t < tMax/3){
         addEllipse(renderer, center, {size * t, 0}, {0, size * t}, 100, zLevel, ellipseColor);

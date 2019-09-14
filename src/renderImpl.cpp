@@ -164,8 +164,8 @@ void __transferSimplePosColor(__RenderSimple *info){
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, info->EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * info->numOfIndices, info->indexData, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, VERTEX_SIZE_POS_COLOR * sizeof(float), (void*)0);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, VERTEX_SIZE_POS_COLOR * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
@@ -252,6 +252,21 @@ void __addPointColor(__RenderSimple *info, Vec3f p, Vec3f c){
     info->vertexData[info->numOfVertices * info->vertexSize + 3] = c.x;
     info->vertexData[info->numOfVertices * info->vertexSize + 4] = c.y;
     info->vertexData[info->numOfVertices * info->vertexSize + 5] = c.z;
+    info->vertexData[info->numOfVertices * info->vertexSize + 6] = 1.0f;
+
+    info->indexData[info->numOfIndices] = info->numOfVertices;
+    info->numOfVertices += 1;
+    info->numOfIndices += 1;
+}
+
+void __addPointColor(__RenderSimple *info, Vec3f p, Vec4f c){
+    info->vertexData[info->numOfVertices * info->vertexSize + 0] = p.x;
+    info->vertexData[info->numOfVertices * info->vertexSize + 1] = p.y;
+    info->vertexData[info->numOfVertices * info->vertexSize + 2] = p.z;
+    info->vertexData[info->numOfVertices * info->vertexSize + 3] = c.x;
+    info->vertexData[info->numOfVertices * info->vertexSize + 4] = c.y;
+    info->vertexData[info->numOfVertices * info->vertexSize + 5] = c.z;
+    info->vertexData[info->numOfVertices * info->vertexSize + 6] = c.w;
 
     info->indexData[info->numOfIndices] = info->numOfVertices;
     info->numOfVertices += 1;
