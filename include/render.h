@@ -50,10 +50,11 @@ void addText(Renderer *r, const char *text, float x, float y, float z, float sx,
 //f(x) = k * x + b
 float linearTransformNDC(float x, float min, float max);
 float linearTransform(float x, float min, float max, float minPrime, float maxPrime);
+bool solveOneRoot(float (*f)(float), float a, float b, float eps, int maxIter, float *ret);
 
 void addFunctionGraph(Renderer *renderer, float *samples, int sampleCount, float sampleXMin, float sampleXMax, float gxMin, float gxMax, float gyMin, float gyMax, float zLevel, Vec3f color);
 
-void addGraphGrid(Renderer *renderer, float xmin, float xmax, float ymin, float ymax, int xCount, int yCount, float sizeXNDC, float aspect, float zLevel, Vec3f color);
+void addGraphGrid(Renderer *renderer, float xmin, float xmax, float ymin, float ymax, float YAxisPos, float XAxisPos, int xCount, int yCount, float sizeXNDC, float aspect, float zLevel, const char *horAxisName, const char *verAxisName, Vec3f color1, Vec3f color2);
 
 void addFunctionGraph(Renderer *renderer, float (*f)(float), int sampleCount, float sampleXMin, float sampleXMax, float gxMin, float gxMax, float gyMin, float gyMax, float zLevel, Vec3f color);
 

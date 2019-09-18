@@ -4,6 +4,10 @@
 
 #include "renderImpl.h"
 
+#include <string>
+#include <codecvt>
+
+
 void __ensureSizeText(__RenderText *info, int toBeAdded){
     if(info->count + toBeAdded > info->texturesAllocated){
         int newSize = __max__(info->texturesAllocated * 2, info->texturesAllocated + toBeAdded) * sizeof(GLuint);
@@ -20,11 +24,16 @@ void __ensureSizeText(__RenderText *info, int toBeAdded){
 }
 
 void __addText(__RenderText *info, FT_Face face, const char *text, float x, float y, float z, float sx, float sy, Vec3f color) {
-    unsigned int len = strlen(text);
-    __ensureSizeText(info, len);
+    unsigned int lenRaw = strlen(text);
+    __ensureSizeText(info, lenRaw);
+
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
+    const std::wstring wideText = convert.from_bytes(text);
 
     glActiveTexture(GL_TEXTURE0);
-    glGenTextures(len, &info->textures[info->count]);
+    glGenTextures(wideText.size(), &info->textures[info->count]);
+
+    FT_Select_Charmap(face , ft_encoding_unicode);
 
 
     const char *p;
@@ -35,9 +44,13 @@ void __addText(__RenderText *info, FT_Face face, const char *text, float x, floa
     //sx /= ww;
     //sy /= wh;
 
-    for(int i = 0; i < len; ++i) {
-        p = text + i;
-        if(FT_Load_Char(face, *p, FT_LOAD_RENDER)){
+    //return std::u32string(reinterpret_cast<char32_t const *>(asInt.data()), asInt.length());
+
+
+    for(int i = 0; i < wideText.size(); ++i) {
+        //p = text + i;
+
+        if(FT_Load_Char(face, wideText[i], FT_LOAD_RENDER)){
             printf("could not load char\n");
             exit(1);
         }
@@ -99,7 +112,7 @@ void __addText(__RenderText *info, FT_Face face, const char *text, float x, floa
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    info->count += len;
+    info->count += wideText.size();
 
 }
 

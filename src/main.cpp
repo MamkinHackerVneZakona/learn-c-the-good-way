@@ -19,6 +19,10 @@ float parabola(float x){
     return 2 * (x - 2)*(x - 2) - 1;
 }
 
+float cubic(float x){
+    return (x - 1) * (x - 1) * (x - 1) - 2;
+}
+
 float sin_(float x){
     return sin(x) * sinScale;
 }
@@ -69,7 +73,7 @@ double startTime = -1;
 
 
 void integrateBall(float dt){
-    float p32 = 32.0f/SCR_WIDTH;
+    float p16 = 32.0f/SCR_WIDTH;
 
     if(ballCreated){
 
@@ -94,7 +98,7 @@ void integrateBall(float dt){
             }
 
             if(dot(n, sub(ballInProcess.end, ballInProcess.start)) < 0){
-                dist = dot(sub(sub(ballPos, mult(n, p32)), line->line.start), n);
+                dist = dot(sub(sub(ballPos, mult(n, p16)), line->line.start), n);
 
                 float t = dist / (float) abs(dot(n, sub(ballInProcess.end, ballInProcess.start)));
 
@@ -136,35 +140,51 @@ void onUpdate(Renderer *r){
     Vec3f black = {0, 0, 0};
     Vec3f red = {1, 0, 0};
     Vec3f green = {0, 1, 0};
+    Vec4f greenAlpha = {0, 1, 0, 1};
     Vec3f blue = {0, 0, 1};
     Vec3f white = {1, 1, 1};
+    Vec3f yellow = {1, 1, 0};
+    Vec4f magentaAlpha = {1, 0, 1, 1};
     Vec4f blueAlpha = {blue.x, blue.y, blue.z, 1.0};
     
     Vec2f origin = {0.0f, 0.0f};
     Vec2f i = {1.0f, 0.0f};
     Vec2f j = {0.0f, 1.0f};
 
-    float p32 = 32.0f/SCR_WIDTH;
-    float p16 = p32/2;
-    addLine2PosColor(r, { {-1,0}, {1, 0} }, 0.4, white, white);
-    addLine2PosColor(r, { {0, -1}, {0, 1} }, 0.4, white, white);
+    float p16 = 16.0f/SCR_WIDTH * 2; //ndc measure
+    float p8 = p16/2;
     float ar = (float) SCR_WIDTH / SCR_HEIGHT;
 
-    addText(r, "Y", -p32, 1 - p32 * ar, 0, p32, p32 * ar, black);
-    addText(r, "X", 1 - p32, - p32 * ar, 0, p32, p32 * ar, black);
-    float xMin = -4 * M_PI;
-    float xMax = 1 * M_PI;
-    float yMin = -4;
-    float yMax = 4;
+    float xMin = -5;
+    float xMax = 5;
+    float yMin = -5;
+    float yMax = 5;
+    char outputString[100];
+    
+    addText(r, u8"f(x) = (x-1)³ - 2", linearTransformNDC(2.8, xMin, xMax), linearTransformNDC(2, yMin, yMax), 0, p16, p16 * ar, black);
     addFunctionGraph(r, sin_, 100, -2 * M_PI, 2 * M_PI, xMin, xMax, yMin, yMax, 0, green);
-    addFunctionGraph(r, parabola, 100, 1, 3, xMin, xMax, yMin, yMax,  0, red);
-    addGraphGrid(r, xMin, xMax, yMin, yMax, 10, 10, p32, ar, 0.4, white);
+    //addFunctionGraph(r, parabola, 100, 1, 3, xMin, xMax, yMin, yMax,  0, red);
+
+    float root;
+    bool solved = solveOneRoot(cubic, xMin, xMax, 0.001, 1000, &root);
+
+
+    float sol1;
+    solveOneRoot([](float x){return cubic(x) - sin_(x);}, 0, M_PI, 0.01, 1000, &sol1);
+
+    sprintf (outputString, u8"g(x) = %.3fsin(x)", sinScale);
+    addText(r, outputString, linearTransformNDC(sol1 + 0.3, xMin, xMax), linearTransformNDC(cubic(sol1), yMin, yMax), 0, p16, p16 * ar, black);
+    addEllipse(r, {linearTransformNDC(root, xMin, xMax), 0}, mult(i, p8/2), mult(j, p8/2 * ar), 10, 0, greenAlpha);
+    addEllipse(r, {linearTransformNDC(sol1, xMin, xMax), linearTransformNDC(cubic(sol1), yMin, yMax)}, mult(i, p8/2), mult(j, p8/2 * ar), 10, 0, magentaAlpha);
+    addFunctionGraph(r, cubic, 100, -5, 5, xMin, xMax, yMin, yMax, 0, {0.792, 0.070, 0.262});
+    addGraphGrid(r, xMin, xMax, yMin, yMax, 1, -2, 10, 10, p16, ar, 0.4, "X'", "Y'", yellow, blue);
+    addGraphGrid(r, xMin, xMax, yMin, yMax, 0, 0, 10, 10, p16, ar, 0.4, "X", "Y", white, black);
     float gamma = 30.0f/180.0f*M_PI;
     
     //addLine2PosColor(r, { {0, 0}, {cos(gamma), sin(gamma) }}, -1, white, white);
     
-    //addEllipse(r, origin, mult({cos(gamma), sin(gamma)}, p32 * 4), mult({-cos(gamma), sin(gamma)}, p32 * 2), 100, 0.0f, green);
-    //addEllipse(r, {0.5f, 0}, mult({cos(gamma), sin(gamma)}, p32 * 4), mult({-cos(gamma), sin(gamma)}, p32 * 2), 100, 0.0f, black);
+    //addEllipse(r, origin, mult({cos(gamma), sin(gamma)}, p16 * 4), mult({-cos(gamma), sin(gamma)}, p16 * 2), 100, 0.0f, green);
+    //addEllipse(r, {0.5f, 0}, mult({cos(gamma), sin(gamma)}, p16 * 4), mult({-cos(gamma), sin(gamma)}, p16 * 2), 100, 0.0f, black);
 
     float dt = glfwGetTime() - lastTime;
     float dtFull = glfwGetTime() - startTime;
@@ -173,7 +193,7 @@ void onUpdate(Renderer *r){
         double blazeTime = blaze->blazeTime;
         Vec2f blazePos = blaze->blazePos;
         if(glfwGetTime() - blazeTime < 3){
-            addBlaze(r, blazePos, p32 * 2, glfwGetTime() - blazeTime, 3, 15, -0.5f, colorPickerForBlaze);
+            addBlaze(r, blazePos, p16 * 2, glfwGetTime() - blazeTime, 3, 15, -0.5f, colorPickerForBlaze);
             prev = blaze;
             blaze = blaze->next;
         }else{
@@ -196,7 +216,7 @@ void onUpdate(Renderer *r){
     }
 
     if(ballCreated){
-        addEllipse(r, ballPos, mult(i, p32), mult(j, p32), 15, 0.6, blueAlpha);
+        addEllipse(r, ballPos, mult(i, p16), mult(j, p16), 15, 0.6, blueAlpha);
     }
 
 
@@ -204,12 +224,12 @@ void onUpdate(Renderer *r){
         double bubbleTime = bubble->bubbleTime;
         Vec2f bubblePos = bubble->bubblePos;
         if(glfwGetTime() - bubbleTime < 0.5){
-            addEllipse(r, bubblePos, mult(i, p16), mult(j, p16), 15, -0.5f, blueAlpha);
+            addEllipse(r, bubblePos, mult(i, p8), mult(j, p8), 15, -0.5f, blueAlpha);
             prev = bubble;
             bubble = bubble->next;
         }else if(glfwGetTime() - bubbleTime < 3){
             float t = (float)(glfwGetTime() - bubbleTime);
-            addEllipse(r, add(bubblePos, {0, (t-0.5f) * (t-0.5f) * 0.5f}), mult(i, p16), mult(j, p16), 15, -0.5f, {0,0,1.0f, (3 - t)/2.5f});
+            addEllipse(r, add(bubblePos, {0, (t-0.5f) * (t-0.5f) * 0.5f}), mult(i, p8), mult(j, p8), 15, -0.5f, {0,0,1.0f, (3 - t)/2.5f});
             prev = bubble;
             bubble = bubble->next;
         

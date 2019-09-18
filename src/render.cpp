@@ -124,10 +124,35 @@ float linearTransformNDC(float x, float min, float max){
     return k * x + b;
 }
 
+//f : [min, max] -> [min', max']
 float linearTransform(float x, float min, float max, float minPrime, float maxPrime){
     float k = (maxPrime - minPrime) / (max - min);
     float b = maxPrime - k * max;
     return k * x + b;
+}
+
+//solve f(x) = 0 on interval [a,b] knowing that f(x) has one and only one root on [a, b] and f(a) * f(b) < 0
+bool solveOneRoot(float (*f)(float), float a, float b, float eps, int maxIter, float *ret){
+    float xPrime = a + (b - a)/2;
+    float aPrime = a;
+    float bPrime = b;
+    for(int i = 0; i < maxIter - 1; ++i){
+        float v = f(xPrime);
+        if(abs(v) < eps){
+            *ret = xPrime;
+            return true;
+        }
+
+        if(v > 0)
+            bPrime = xPrime;
+        else
+            aPrime = xPrime;
+        
+        xPrime = aPrime + (bPrime - aPrime)/2;
+    }
+
+    *ret = xPrime;
+    return false;
 }
 
 
@@ -143,25 +168,35 @@ void addFunctionGraph(Renderer *renderer, float *samples, int sampleCount, float
     }
 }
 
-void addGraphGrid(Renderer *renderer, float xmin, float xmax, float ymin, float ymax, int xCount, int yCount, float sizeXNDC, float aspect, float zLevel, Vec3f color){
+void addGraphGrid(Renderer *renderer, float xmin, float xmax, float ymin, float ymax, float YAxisPos, float XAxisPos, int xCount, int yCount, float sizeXNDC, float aspect, float zLevel, const char *horAxisName, const char *verAxisName, Vec3f color1, Vec3f color2){
+    
+    float xPos = linearTransformNDC(YAxisPos, xmin, xmax);
+    float yPos = linearTransformNDC(XAxisPos, ymin, ymax);
+
+    addLine2PosColor(renderer, { {-1,yPos}, {1, yPos} }, 0.4, color1, color1);
+    addLine2PosColor(renderer, { {xPos, -1}, {xPos, 1} }, 0.4, color1, color1);
+
+    addText(renderer, verAxisName, -sizeXNDC + xPos, 1 - sizeXNDC * aspect, 0, sizeXNDC, sizeXNDC * aspect, color2);
+    addText(renderer, horAxisName, 1 - sizeXNDC, + sizeXNDC * aspect + yPos, 0, sizeXNDC, sizeXNDC * aspect, color2);
+    
     for (int i = 0; i < xCount; ++i) {
         float x = xmin + (xmax - xmin)/(xCount + 1) * (i + 1);
-        float xNDC = linearTransformNDC(x, xmin, xmax);
-        Line2 l = {  {xNDC, -sizeXNDC/3 * aspect / 2} , {xNDC, sizeXNDC * aspect / 3 / 2} };
-        addLine2PosColor(renderer, l, zLevel, color, color);
+        float xNDC = linearTransformNDC(linearTransform(x, xmin, xmax, xmin + YAxisPos, xmax + YAxisPos), xmin, xmax);
+        Line2 l = {  {xNDC, -sizeXNDC/3 * aspect / 2 + yPos} , {xNDC, sizeXNDC * aspect / 3 / 2 + yPos} };
+        addLine2PosColor(renderer, l, zLevel, color1, color1);
         char str[100];
         sprintf(str, "%.3f", x);
-        addText(renderer, str, xNDC - sizeXNDC / 2 * 2, -sizeXNDC * aspect, zLevel, sizeXNDC / 1.5, sizeXNDC * aspect / 1.5, {0,0,0});
+        addText(renderer, str, xNDC - sizeXNDC / 2 * 2, -sizeXNDC * aspect + yPos, zLevel, sizeXNDC / 1.5, sizeXNDC * aspect / 1.5, color2);
     }
 
     for (int i = 0; i < yCount; ++i) {
         float y = ymin + (ymax - ymin)/(yCount + 1) * (i+1);
-        float yNDC = linearTransformNDC(y, ymin, ymax);
-        Line2 l = {  {-sizeXNDC/3 / 2, yNDC * aspect} , {sizeXNDC / 3 / 2, yNDC * aspect} };
-        addLine2PosColor(renderer, l, zLevel, color, color);
+        float yNDC = linearTransformNDC(linearTransform(y, ymin, ymax, ymin + XAxisPos, ymax + XAxisPos), ymin, ymax);
+        Line2 l = {  {-sizeXNDC/3 / 2  + xPos, yNDC} , {sizeXNDC / 3 / 2  + xPos, yNDC} };
+        addLine2PosColor(renderer, l, zLevel, color1, color1);
         char str[100];
         sprintf(str, "%.3f", y);
-        addText(renderer, str, sizeXNDC / 1.5 / 2, yNDC * aspect - sizeXNDC / 2 / 1.5 * aspect, zLevel, sizeXNDC / 1.5, sizeXNDC * aspect / 1.5, {0,0,0});
+        addText(renderer, str, sizeXNDC / 1.5 / 2 + xPos, yNDC - sizeXNDC / 2 / 1.5 * aspect, zLevel, sizeXNDC / 1.5, sizeXNDC * aspect / 1.5, color2);
     }
 }
 
