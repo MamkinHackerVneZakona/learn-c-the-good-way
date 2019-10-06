@@ -6,7 +6,8 @@
 
 #include <string>
 #include <codecvt>
-
+#include <iostream>
+#include <locale>
 
 void __ensureSizeText(__RenderText *info, int toBeAdded){
     if(info->count + toBeAdded > info->texturesAllocated){

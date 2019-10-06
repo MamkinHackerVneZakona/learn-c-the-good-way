@@ -9,15 +9,21 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
 
 include_directories(include)
 
-find_package(glfw3 3.3 QUIET PATHS ${PROJECT_SOURCE_DIR}/libs)
-find_package(glfw3 3.3 QUIET) #imports glfw target
+find_package(glfw3 3.3 QUIET PATHS ${PROJECT_SOURCE_DIR}/libs NO_DEFAULT_PATH)
+if(NOT ${glfw3_FOUND} )
+    find_package(glfw3 3.3 QUIET) #imports glfw target
+endif()   
+
 find_package(Freetype QUIET PATHS ${PROJECT_SOURCE_DIR}/libs NO_DEFAULT_PATH)
-find_package(Freetype QUIET)
+if(NOT ${FREETYPE_FOUND})
+    message( STATUS "Freetype not found localy, looking in global path")
+    find_package(Freetype QUIET)
+endif()
 
 if(NOT ${FREETYPE_FOUND})
     message( SEND_ERROR "Freetype not found" )
 else()
-    message( STATUS "Freetype found: " ${FREETYPE_LIBRARIES} )  
+    message( STATUS "Freetype found: " ${Freetype_DIR} )  
 endif()
 
 if(NOT ${glfw3_FOUND} )
@@ -30,7 +36,7 @@ include_directories(${FREETYPE_INCLUDE_DIRS})
 
 add_executable(learn_c_the_good_way src/glad.c src/main.cpp include/vec.h include/util.h include/Line.h include/render.h src/render.cpp include/renderImpl.h src/renderImpl.cpp src/util.cpp src/vec.cpp)
 
-target_link_libraries(learn_c_the_good_way glfw ${FREETYPE_LIBRARIES})
+target_link_libraries(learn_c_the_good_way glfw freetype)
 
 install(TARGETS learn_c_the_good_way
         CONFIGURATIONS Release
