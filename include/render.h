@@ -37,7 +37,7 @@ struct Renderer {
     FT_Face face;
 };
 
-
+/*Создать (элоцировать) основную структуру, в которой хранятся все буферы.*/
 Renderer *allocRenderer(int windowWidth, int windowHeight, const char *windowName);
 
 void clearAll(Renderer *renderer);
